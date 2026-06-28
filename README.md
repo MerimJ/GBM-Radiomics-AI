@@ -8,7 +8,7 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Dataset](https://img.shields.io/badge/Dataset-TCIA%20CFB--GBM-lightblue)
 
-> **Course seminar project** · Not a clinically validated tool · Raw patient data not included
+> · Not a clinically validated tool · Raw patient data not included
 
 ---
 
