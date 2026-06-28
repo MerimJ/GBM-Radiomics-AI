@@ -1,0 +1,112 @@
+# =============================================================================
+# CFB-GBM AI-Radiomics Project — Master Configuration
+# =============================================================================
+
+# ── Paths (relative to project root) ────────────────────────────────────────
+paths:
+  raw_dicom:    data/raw/cfb_gbm
+  nifti:        data/nifti
+  masks:        data/masks
+  processed:    data/processed
+  regions:      data/processed/regions
+  features:     data/features
+  results:      results
+  figures:      results/figures
+  tables:       results/tables
+  models:       results/models
+  qc_images:    results/figures/qc
+
+# ── TCIA collection ──────────────────────────────────────────────────────────
+tcia:
+  collection: CFB-GBM
+  api_url: https://services.cancerimagingarchive.net/nbia-api/services/v1
+  modalities_of_interest: [MR, CT, RTSTRUCT, RTDOSE]
+  # Set to null to download all patients; or list patient IDs for debugging
+  patient_subset: null   # e.g. ["GBM-001", "GBM-002"] for debug run
+
+# ── MRI sequence classification keywords ────────────────────────────────────
+sequence_keywords:
+  T1Gd:  ["t1c", "t1gd", "t1_gd", "post", "contrast", "ce", "+c", "gad", "gd",
+           "t1ce", "t1 post", "postcontrast"]
+  T1:    ["t1", "mprage", "spgr", "bravo", "t1w", "3d t1"]
+  T2:    ["t2", "t2w", "t2 ", "t2_"]
+  FLAIR: ["flair", "t2 flair", "t2_flair", "fluid attenuated"]
+  DWI:   ["dwi", "dw ", "diffusion"]
+  ADC:   ["adc", "apparent diffusion"]
+
+# ── Preprocessing ────────────────────────────────────────────────────────────
+preprocessing:
+  target_spacing: [1.0, 1.0, 1.0]   # mm; set to [1.0,1.0,3.0] if data is thick-slice
+  normalization: zscore              # zscore | minmax | none
+  n4_bias_correction: true
+  register_flair_to_t1gd: true
+  interpolation: BSpline             # for images; masks use NearestNeighbor
+
+# ── Region creation ──────────────────────────────────────────────────────────
+regions:
+  ring_radii_mm: [5, 10]            # peritumoral dilation radii in mm
+  generate_edema_mask: true
+  generate_contralateral: false     # requires robust brain symmetry
+
+# ── Radiomics ────────────────────────────────────────────────────────────────
+radiomics:
+  params_file:  config/pyradiomics_params.yaml
+  regions_to_extract:
+    - {image: T1Gd,  mask: tumor,   label: T1Gd_Tumor}
+    - {image: FLAIR, mask: tumor,   label: FLAIR_Tumor}
+    - {image: T1Gd,  mask: ring5mm, label: T1Gd_Ring5}
+    - {image: FLAIR, mask: ring5mm, label: FLAIR_Ring5}
+    - {image: T1Gd,  mask: ring10mm,label: T1Gd_Ring10}
+    - {image: FLAIR, mask: ring10mm,label: FLAIR_Ring10}
+  output_raw:   data/features/radiomics_raw.csv
+  output_clean: data/features/radiomics_clean.csv
+
+# ── Feature cleaning ─────────────────────────────────────────────────────────
+feature_cleaning:
+  missing_threshold:    0.20    # drop features with >20% missing
+  correlation_threshold: 0.90   # remove one of any pair |r|>0.90
+  near_zero_var_threshold: 0.01 # fraction of unique values
+
+# ── ML models ────────────────────────────────────────────────────────────────
+ml:
+  cv_folds: 5
+  random_state: 42
+  test_size: 0.20
+  scoring: roc_auc
+  n_bootstrap: 1000
+  class_weight: balanced         # handles class imbalance
+  models:
+    - LogisticRegression
+    - SVM
+    - RandomForest
+    - XGBoost
+    - LightGBM
+
+# ── Deep learning ────────────────────────────────────────────────────────────
+deep_learning:
+  enabled: true
+  device: cuda                   # cuda | cpu
+  patch_size: [96, 96, 96]
+  batch_size: 4
+  max_epochs: 100
+  lr: 1.0e-4
+  weight_decay: 1.0e-5
+  dropout: 0.3
+  early_stopping_patience: 15
+  backbone: resnet10             # resnet10 | densenet121 | efficientnet_b0
+  embeddings_dim: 128
+
+# ── Outcome ──────────────────────────────────────────────────────────────────
+outcome:
+  # Priority order; first one found is used
+  priority: [overall_survival, progression, treatment_response, clustering]
+  survival_split: median         # median | 12month | 18month
+  survival_column: OS_days       # expected column name in clinical CSV
+  event_column:   OS_event       # 1=died, 0=censored
+  label_column:   OS_class       # derived binary label
+
+# ── XAI ──────────────────────────────────────────────────────────────────────
+xai:
+  method: shap                   # shap | permutation | both
+  n_top_features: 20
+  background_samples: 50

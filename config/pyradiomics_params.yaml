@@ -1,0 +1,26 @@
+# PyRadiomics Parameter File — CFB-GBM NIfTI extraction
+# Resampled to 3mm for speed; LoG and Wavelet disabled
+
+setting:
+  resampledPixelSpacing: [3, 3, 3]
+  interpolator: sitkBSpline
+  label: 1
+
+  binWidth: 25
+  normalize: false
+  force2D: false
+
+  minimumROIDimensions: 2
+  minimumROISize: 10
+
+  padDistance: 5
+  distances: [1]
+  symmetricalGLCM: true
+
+featureClass:
+  shape:
+  firstorder:
+  glcm:
+
+imageType:
+  Original: {}

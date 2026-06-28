@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GBM Radiomics Poster</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #08101c;
+    color: #dde8f0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .poster {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: linear-gradient(160deg, #0a1624 0%, #0d1f32 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(0,180,255,0.2);
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(0,150,255,0.1);
+  }
+
+  /* ── HEADER ── */
+  .poster-header {
+    background: linear-gradient(135deg, #0a2040 0%, #0f3060 50%, #051828 100%);
+    padding: 36px 48px 28px;
+    border-bottom: 3px solid rgba(0,200,255,0.4);
+    position: relative;
+    overflow: hidden;
+  }
+  .poster-header::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, #00d4ff, #7b2ff7, #00ff96, #00d4ff);
+  }
+  .poster-title {
+    font-size: 2.1rem; font-weight: 800; color: #ffffff;
+    line-height: 1.2; margin-bottom: 8px;
+  }
+  .poster-subtitle {
+    font-size: 1.1rem; color: #7ecfff; margin-bottom: 14px; font-weight: 300;
+  }
+  .header-meta { font-size: 0.9rem; color: #6a8aaa; }
+  .header-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .tag { padding: 3px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
+  .tag-b { background: rgba(0,212,255,0.12); color: #00d4ff; border: 1px solid rgba(0,212,255,0.3); }
+  .tag-g { background: rgba(0,255,150,0.1); color: #00ff96; border: 1px solid rgba(0,255,150,0.3); }
+  .tag-p { background: rgba(123,47,247,0.2); color: #b87aff; border: 1px solid rgba(123,47,247,0.4); }
+
+  /* ── MAIN GRID ── */
+  .poster-body {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr 1fr;
+    gap: 0;
+  }
+
+  .col {
+    padding: 24px 20px;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+  .col:last-child { border-right: none; }
+
+  .section { margin-bottom: 22px; }
+  .section-title {
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px;
+    color: #00d4ff; font-weight: 700; margin-bottom: 10px;
+    padding-bottom: 6px; border-bottom: 1px solid rgba(0,212,255,0.25);
+  }
+  h3 { font-size: 1rem; color: #c8d8e8; margin-bottom: 8px; font-weight: 600; }
+  p  { font-size: 0.85rem; line-height: 1.65; color: #a0b8cc; margin-bottom: 8px; }
+  li { font-size: 0.83rem; line-height: 1.7; color: #a0b8cc; margin-bottom: 3px; }
+  ul { padding-left: 18px; }
+
+  .card {
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px; padding: 14px 16px;
+    border: 1px solid rgba(255,255,255,0.07);
+    margin-bottom: 10px;
+  }
+  .card-label { font-size: 0.72rem; text-transform: uppercase; color: #7ecfff; margin-bottom: 6px; font-weight: 600; }
+
+  .metric-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .metric {
+    flex: 1; text-align: center;
+    background: rgba(0,212,255,0.07); border-radius: 10px;
+    padding: 12px 6px; border: 1px solid rgba(0,212,255,0.2);
+  }
+  .metric-val { font-size: 1.8rem; font-weight: 800; color: #00d4ff; line-height: 1; }
+  .metric-label { font-size: 0.68rem; color: #7a9aaa; margin-top: 4px; }
+
+  .result-metric {
+    flex: 1; text-align: center;
+    background: rgba(0,255,150,0.07); border-radius: 10px;
+    padding: 12px 6px; border: 1px solid rgba(0,255,150,0.25);
+  }
+  .result-val { font-size: 1.8rem; font-weight: 800; color: #00ff96; line-height: 1; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 6px; }
+  th { background: rgba(0,212,255,0.1); color: #00d4ff; padding: 7px 8px; text-align: left; font-weight: 600; border-bottom: 1px solid rgba(0,212,255,0.25); }
+  td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #a0b8cc; }
+  .best td { background: rgba(0,255,150,0.07) !important; color: #00ff96; font-weight: 700; }
+
+  .finding {
+    background: rgba(0,255,150,0.07); border: 1px solid rgba(0,255,150,0.25);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;
+  }
+  .finding p { color: #c8f0d8; font-size: 0.83rem; }
+  .finding strong { color: #00ff96; }
+
+  .highlight {
+    background: rgba(0,212,255,0.07); border: 1px solid rgba(0,212,255,0.25);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;
+  }
+  .highlight p { color: #c8e4f0; font-size: 0.83rem; }
+
+  .region-bar { margin-bottom: 7px; }
+  .region-name { font-size: 0.75rem; color: #8898aa; margin-bottom: 3px; display: flex; justify-content: space-between; }
+  .bar-bg { background: rgba(255,255,255,0.06); border-radius: 4px; height: 16px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 0.7rem; font-weight: 700; color: white; }
+
+  .step {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .step-n { font-size: 1rem; font-weight: 800; color: #00d4ff; min-width: 22px; }
+  .step-t { font-size: 0.82rem; color: #a0b8cc; }
+
+  .mri-img { width: 100%; border-radius: 8px; border: 1px solid rgba(0,212,255,0.2); margin-bottom: 4px; }
+  .fig-cap { font-size: 0.7rem; color: #556677; text-align: center; }
+
+  /* ── FOOTER ── */
+  .poster-footer {
+    background: rgba(0,0,0,0.3);
+    padding: 14px 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    font-size: 0.78rem; color: #4a6a7a;
+  }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .poster { box-shadow: none; border: 1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+<div class="poster">
+
+  <!-- HEADER -->
+  <div class="poster-header">
+    <div style="display:grid; grid-template-columns:1fr auto; gap:20px; align-items:start;">
+      <div>
+        <div class="poster-title">AI-Driven MRI Radiomics for Glioblastoma</div>
+        <div class="poster-subtitle">Quantitative Features Beyond Visible Segmentation for Outcome Prediction and Explainable Machine Learning</div>
+        <div class="header-meta">Course Seminar · Author: [Your Name] · 2026 · TCIA CFB-GBM Dataset</div>
+        <div class="header-tags">
+          <span class="tag tag-b">PyRadiomics 3.0</span>
+          <span class="tag tag-b">IBSI-Compliant</span>
+          <span class="tag tag-g">Peritumoral Rings</span>
+          <span class="tag tag-p">SHAP Explainability</span>
+          <span class="tag tag-b">5-fold CV</span>
+          <span class="tag tag-g">n=261 / n=79</span>
+          <span class="tag tag-p">XGBoost · RF · LogReg · SVM</span>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; min-width:340px;">
+        <div class="metric" style="background:rgba(0,255,150,0.08); border-color:rgba(0,255,150,0.3);">
+          <div class="metric-val" style="color:#00ff96;">0.710</div>
+          <div class="metric-label">Best AUC (n=261)</div>
+        </div>
+        <div class="metric" style="background:rgba(0,255,150,0.08); border-color:rgba(0,255,150,0.3);">
+          <div class="metric-val" style="color:#00ff96;">+19%</div>
+          <div class="metric-label">Ring vs Tumor-only</div>
+        </div>
+        <div class="metric" style="background:rgba(0,255,150,0.08); border-color:rgba(0,255,150,0.3);">
+          <div class="metric-val" style="color:#00ff96;">0.714</div>
+          <div class="metric-label">Best single feature</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="poster-body">
+
+    <!-- ── LEFT COLUMN ── -->
+    <div class="col">
+
+      <div class="section">
+        <div class="section-title">Introduction</div>
+        <p><strong style="color:#c8d8e8;">Glioblastoma (GBM)</strong> is the most aggressive primary brain tumour with median OS of 14–16 months. Standard clinical imaging uses RANO criteria — measuring contrast-enhancing volume on T1Gd MRI.</p>
+        <p>However, GBM infiltrates <strong style="color:#00d4ff;">2–3 cm beyond the visible enhancement</strong>. The peritumoral tissue visible on FLAIR MRI contains infiltrating cells, angiogenic signals, and immune microenvironment changes that are prognostically important but clinically ignored.</p>
+        <div class="finding">
+          <p><strong>Research Question:</strong> Do quantitative radiomic features from peritumoral tissue provide independent prognostic information beyond what is visible in the tumour itself?</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Dataset</div>
+        <div class="metric-row">
+          <div class="metric"><div class="metric-val">264</div><div class="metric-label">CFB-GBM total</div></div>
+          <div class="metric"><div class="metric-val">261</div><div class="metric-label">TSV ML cohort</div></div>
+          <div class="metric"><div class="metric-val">79</div><div class="metric-label">NIfTI cohort</div></div>
+        </div>
+        <ul>
+          <li><strong>T1Gd:</strong> contrast-enhancing tumour core</li>
+          <li><strong>FLAIR:</strong> peritumoral infiltration zone</li>
+          <li><strong>GTV mask:</strong> radiotherapy planning contour</li>
+          <li><strong>Outcome:</strong> OS binary (long ≥55w / short &lt;55w)</li>
+          <li>Balance: 40 long / 39 short (79-patient cohort)</li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Pipeline Overview</div>
+        <div class="step"><div class="step-n">1</div><div class="step-t"><strong>Data Download</strong> — TCIA NIfTI (001–080)</div></div>
+        <div class="step"><div class="step-n">2</div><div class="step-t"><strong>QC Verification</strong> — 79/80 patients with valid GTV</div></div>
+        <div class="step"><div class="step-n">3</div><div class="step-t"><strong>Region Creation</strong> — Tumor mask + Ring 5mm + Ring 10mm</div></div>
+        <div class="step"><div class="step-n">4</div><div class="step-t"><strong>Feature Extraction</strong> — PyRadiomics, 3mm resampling, 6 regions</div></div>
+        <div class="step"><div class="step-n">5</div><div class="step-t"><strong>ML Training</strong> — 4 classifiers, 5-fold CV, bootstrap CI</div></div>
+        <div class="step"><div class="step-n">6</div><div class="step-t"><strong>XAI</strong> — SHAP values, permutation importance</div></div>
+      </div>
+
+    </div>
+
+    <!-- ── CENTRE COLUMN ── -->
+    <div class="col">
+
+      <div class="section">
+        <div class="section-title">Peritumoral Rings — Method</div>
+        <img src="../results/figures/qc/001_t0_qc.png" alt="QC figure"
+             class="mri-img"
+             onerror="this.style.background='rgba(0,50,80,0.5)'; this.style.height='120px'">
+        <div class="fig-cap">Patient 001 — T1Gd | T1Gd+GTV | FLAIR+GTV | T1Gd+Ring 5mm (blue)</div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:12px;">
+          <div class="card" style="text-align:center; border-color:rgba(214,39,40,0.3);">
+            <div style="font-size:1.5rem;">🔴</div>
+            <div class="card-label" style="color:#d62728;">Intratumoral</div>
+            <div style="font-size:0.75rem; color:#8898aa;">GTV mask</div>
+          </div>
+          <div class="card" style="text-align:center; border-color:rgba(44,160,44,0.3);">
+            <div style="font-size:1.5rem;">🟢</div>
+            <div class="card-label" style="color:#2ca02c;">Ring 5mm</div>
+            <div style="font-size:0.75rem; color:#8898aa;">0→5mm from GTV</div>
+          </div>
+          <div class="card" style="text-align:center; border-color:rgba(31,119,180,0.3);">
+            <div style="font-size:1.5rem;">🔵</div>
+            <div class="card-label" style="color:#1f77b4;">Ring 10mm</div>
+            <div style="font-size:0.75rem; color:#8898aa;">5→10mm from GTV</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Key Results</div>
+
+        <div class="card-label" style="margin-bottom:8px;">261-Patient Cohort (TSV features, 5-fold CV)</div>
+        <table>
+          <tr><th>Experiment</th><th>AUC</th><th>95% CI</th></tr>
+          <tr><td>Volume Only</td><td>0.627</td><td>0.562–0.692</td></tr>
+          <tr><td>All Radiomics</td><td>0.670</td><td>0.607–0.735</td></tr>
+          <tr class="best"><td>★ Intratumoral Only</td><td>0.710</td><td>0.648–0.767</td></tr>
+        </table>
+
+        <div class="card-label" style="margin: 14px 0 8px;">79-Patient NIfTI Cohort — Peritumoral Comparison</div>
+        <table>
+          <tr><th>Region Configuration</th><th>AUC</th><th>95% CI</th></tr>
+          <tr><td>T1Gd Tumor Only</td><td>0.562</td><td>0.437–0.688</td></tr>
+          <tr><td>Tumor T1Gd + FLAIR</td><td>0.535</td><td>0.405–0.664</td></tr>
+          <tr class="best"><td>★ Tumor + Ring 5mm</td><td>0.670</td><td>0.545–0.794</td></tr>
+          <tr><td>All Regions (6)</td><td>0.611</td><td>0.500–0.738</td></tr>
+        </table>
+
+        <div class="finding" style="margin-top:12px;">
+          <p><strong>+19% relative AUC improvement</strong> when adding Ring 5mm features to tumor-only (0.562 → 0.670). Logistic Regression L1 wins — suggesting a sparse set of peritumoral features drives prediction.</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">ROC Curves</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div>
+            <img src="../results/figures/roc_curves.png" alt="ROC 261" class="mri-img"
+                 onerror="this.style.display='none'">
+            <div class="fig-cap">n=261 cohort</div>
+          </div>
+          <div>
+            <img src="../results/figures/roc_peritumoral.png" alt="ROC peritumoral" class="mri-img"
+                 onerror="this.style.display='none'">
+            <div class="fig-cap">n=79 peritumoral</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT COLUMN ── -->
+    <div class="col">
+
+      <div class="section">
+        <div class="section-title">Per-Region Discriminative Power</div>
+        <p style="margin-bottom:10px;">Mean univariate AUC per feature across all 79 patients:</p>
+
+        <div class="region-bar">
+          <div class="region-name"><span>T1Gd Ring 5mm</span><span style="color:#00ff96;">0.598</span></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:83%; background:linear-gradient(90deg,#2ca02c,#00ff96);">0.598</div></div>
+        </div>
+        <div class="region-bar">
+          <div class="region-name"><span>T1Gd Ring 10mm</span><span style="color:#4aafff;">0.591</span></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:81%; background:linear-gradient(90deg,#1f77b4,#4aafff);">0.591</div></div>
+        </div>
+        <div class="region-bar">
+          <div class="region-name"><span>FLAIR Tumor</span><span style="color:#ffaa44;">0.571</span></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:74%; background:linear-gradient(90deg,#ff7f0e,#ffaa44);">0.571</div></div>
+        </div>
+        <div class="region-bar">
+          <div class="region-name"><span>FLAIR Ring 5mm</span><span style="color:#ffcc88;">0.570</span></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:73%; background:linear-gradient(90deg,#ff9933,#ffcc88);">0.570</div></div>
+        </div>
+        <div class="region-bar">
+          <div class="region-name"><span>FLAIR Ring 10mm</span><span style="color:#aaccff;">0.570</span></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:73%; background:linear-gradient(90deg,#5588cc,#aaccff);">0.570</div></div>
+        </div>
+        <div class="region-bar">
+          <div class="region-name"><span>T1Gd Tumor</span><span style="color:#ff8888;">0.556</span></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:67%; background:linear-gradient(90deg,#d62728,#ff8888);">0.556</div></div>
+        </div>
+        <div class="fig-cap" style="text-align:left; margin-top:6px;">Bars normalised to max AUC 0.5–0.72. Best single feature (T1Gd Ring 5mm): AUC = 0.714</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Explainable AI — SHAP</div>
+        <img src="../results/figures/shap_bar.png" alt="SHAP bar" class="mri-img"
+             onerror="this.style.display='none'">
+        <div class="fig-cap">Top features by mean |SHAP|, coloured by sequence/region</div>
+        <div class="highlight" style="margin-top:8px;">
+          <p>SHAP TreeExplainer assigns per-patient, per-feature attributions. Features coloured by origin region (T1Gd tumor=red, FLAIR=orange, rings=green/blue). Confirms which regions drive the model — not just which features.</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Conclusions</div>
+        <ul>
+          <li>Intratumoral radiomics: <strong style="color:#00d4ff;">AUC 0.710</strong> vs volume-only <strong style="color:#8898aa;">0.627</strong> (+13%)</li>
+          <li>Peritumoral Ring 5mm: <strong style="color:#00ff96;">AUC 0.670</strong> vs tumor-only <strong style="color:#8898aa;">0.562</strong> (+19%)</li>
+          <li>T1Gd rings outperform FLAIR rings — vascular permeability signal</li>
+          <li>Sparse logistic regression wins with peritumoral features</li>
+          <li>SHAP XAI provides biologically interpretable feature rankings</li>
+        </ul>
+        <div class="finding" style="margin-top:12px;">
+          <p>The tissue <em>surrounding</em> the visible tumour boundary carries more discriminative signal than the tumour itself — validating the "beyond visible segmentation" hypothesis.</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Repository</div>
+        <div class="card">
+          <div class="card-label">GitHub · Full Pipeline · Reproducible</div>
+          <p style="font-size:0.8rem; color:#7ecfff; font-family:monospace; margin-bottom:6px;">[github.com/your-username/cfb-gbm-ai-radiomics]</p>
+          <div style="font-size:0.75rem; color:#556677; font-family:monospace; line-height:1.6;">
+            conda env create -f environment.yml<br>
+            conda activate cfb-gbm-radiomics<br>
+            python src/create_regions_nifti.py<br>
+            python src/extract_radiomics_nifti.py<br>
+            python src/train_peritumoral_comparison.py
+          </div>
+        </div>
+        <p style="font-size:0.73rem; color:#445566; margin-top:6px;"><em>Not a clinical tool. Research/educational purposes only. Raw patient data not included.</em></p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="poster-footer">
+    <span>AI-Driven MRI Radiomics for Glioblastoma · TCIA CFB-GBM · 2026</span>
+    <span>PyRadiomics · scikit-learn · XGBoost · SHAP · SimpleITK</span>
+    <span>Data: The Cancer Imaging Archive (TCIA) — public dataset</span>
+  </div>
+
+</div>
+</body>
+</html>

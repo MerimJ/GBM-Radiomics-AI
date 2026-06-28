@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Driven MRI Radiomics for Glioblastoma</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a1a; color: #e8e8f0; }
+
+  .deck { width: 100%; }
+
+  .slide {
+    width: 100%; min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 60px 80px;
+    page-break-after: always;
+    position: relative; overflow: hidden;
+  }
+
+  /* Slide themes */
+  .title-slide { background: linear-gradient(135deg, #0d1b2a 0%, #1b2838 50%, #0f3460 100%); }
+  .dark-slide  { background: linear-gradient(160deg, #0d1b2a 0%, #12212e 100%); }
+  .accent-slide{ background: linear-gradient(160deg, #0f2940 0%, #0a1f35 100%); }
+  .result-slide{ background: linear-gradient(160deg, #0d2818 0%, #0a1a10 100%); }
+  .warn-slide  { background: linear-gradient(160deg, #1a0d00 0%, #2a1500 100%); }
+
+  /* Decorative line */
+  .slide::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 6px; height: 100%;
+    background: linear-gradient(180deg, #00d4ff, #7b2ff7);
+  }
+
+  /* Slide number */
+  .slide-num {
+    position: absolute; bottom: 24px; right: 36px;
+    font-size: 13px; color: rgba(255,255,255,0.3); font-weight: 300;
+  }
+
+  h1 { font-size: 3rem; font-weight: 700; line-height: 1.15; color: #ffffff; margin-bottom: 16px; }
+  h2 { font-size: 2rem; font-weight: 600; color: #00d4ff; margin-bottom: 28px; border-bottom: 2px solid rgba(0,212,255,0.3); padding-bottom: 10px; }
+  h3 { font-size: 1.25rem; font-weight: 600; color: #7ecfff; margin-bottom: 12px; margin-top: 20px; }
+  p  { font-size: 1.05rem; line-height: 1.7; color: #c8d8e8; margin-bottom: 12px; }
+  li { font-size: 1.0rem; line-height: 1.75; color: #c8d8e8; margin-bottom: 6px; }
+  ul { padding-left: 24px; }
+
+  .subtitle { font-size: 1.3rem; color: #7ecfff; margin-bottom: 8px; font-weight: 300; }
+  .author   { font-size: 1.1rem; color: #8898aa; margin-top: 32px; }
+  .tag { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin: 4px; }
+  .tag-blue  { background: rgba(0,212,255,0.15); color: #00d4ff; border: 1px solid rgba(0,212,255,0.3); }
+  .tag-green { background: rgba(0,255,150,0.1);  color: #00ff96; border: 1px solid rgba(0,255,150,0.3); }
+  .tag-purple{ background: rgba(123,47,247,0.2); color: #b87aff; border: 1px solid rgba(123,47,247,0.4); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+
+  .card {
+    background: rgba(255,255,255,0.05); border-radius: 12px;
+    padding: 20px 24px; border: 1px solid rgba(255,255,255,0.08);
+  }
+  .card-title { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: #7ecfff; margin-bottom: 10px; }
+
+  .metric-box {
+    background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.25);
+    border-radius: 12px; padding: 20px; text-align: center;
+  }
+  .metric-val { font-size: 2.8rem; font-weight: 800; color: #00d4ff; line-height: 1; }
+  .metric-label { font-size: 0.85rem; color: #8898aa; margin-top: 6px; }
+  .metric-sub   { font-size: 0.8rem; color: #5a7a8a; }
+
+  .result-box {
+    background: rgba(0,255,150,0.07); border: 1px solid rgba(0,255,150,0.25);
+    border-radius: 12px; padding: 20px; text-align: center;
+  }
+  .result-val { font-size: 2.5rem; font-weight: 800; color: #00ff96; }
+  .result-delta { font-size: 1rem; color: #00ff96; font-weight: 700; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.92rem; }
+  th { background: rgba(0,212,255,0.12); color: #00d4ff; padding: 10px 14px; text-align: left; font-weight: 600; border-bottom: 2px solid rgba(0,212,255,0.3); }
+  td { padding: 9px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); color: #c8d8e8; }
+  tr:hover td { background: rgba(255,255,255,0.03); }
+  .best-row td { background: rgba(0,255,150,0.08) !important; color: #00ff96; font-weight: 700; }
+
+  .mri-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-top: 16px; }
+  .mri-placeholder {
+    background: linear-gradient(135deg, #1a2a3a, #0d1f2d);
+    border-radius: 8px; padding-top: 100%;
+    position: relative; border: 1px solid rgba(0,212,255,0.2);
+  }
+  .mri-label {
+    text-align: center; font-size: 0.8rem; color: #7ecfff; margin-top: 6px;
+  }
+  .mri-img { width: 100%; border-radius: 8px; border: 1px solid rgba(0,212,255,0.25); }
+
+  .pipeline-step {
+    background: rgba(255,255,255,0.04); border-radius: 10px;
+    padding: 14px 18px; border-left: 3px solid #00d4ff;
+    margin-bottom: 10px; display: flex; align-items: center; gap: 14px;
+  }
+  .step-num { font-size: 1.5rem; font-weight: 800; color: #00d4ff; min-width: 36px; }
+  .step-text { font-size: 0.95rem; color: #c8d8e8; }
+  .step-badge { margin-left: auto; font-size: 0.75rem; color: #8898aa; }
+
+  .highlight-box {
+    background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 10px; padding: 18px 22px; margin: 16px 0;
+  }
+  .finding-box {
+    background: rgba(0,255,150,0.08); border: 1px solid rgba(0,255,150,0.3);
+    border-radius: 10px; padding: 18px 22px; margin: 16px 0;
+  }
+  .finding-box p { color: #c8f0d8; font-size: 1.1rem; font-weight: 500; }
+
+  .quote {
+    font-size: 1.4rem; font-style: italic; color: #7ecfff;
+    border-left: 4px solid #00d4ff; padding-left: 24px;
+    margin: 20px 0; line-height: 1.6;
+  }
+
+  .auc-bar { height: 28px; border-radius: 4px; margin-bottom: 8px; position: relative; display: flex; align-items: center; }
+  .auc-bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 10px; font-size: 0.85rem; font-weight: 700; }
+
+  .icon { font-size: 2rem; margin-bottom: 8px; }
+
+  .fig-caption { font-size: 0.78rem; color: #556677; text-align: center; margin-top: 6px; }
+
+  .footer { font-size: 0.75rem; color: #334455; text-align: center; margin-top: 16px; }
+
+  @media print {
+    .slide { min-height: auto; height: 148mm; padding: 30px 40px; }
+    body { background: white; color: black; }
+  }
+
+  /* Navigation hint */
+  .nav-hint { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    font-size: 0.75rem; color: rgba(255,255,255,0.2); pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="deck">
+
+<!-- ─────────────────────── SLIDE 1: TITLE ─────────────────────── -->
+<div class="slide title-slide">
+  <div class="subtitle">Course Seminar Project · AI in Medical Imaging</div>
+  <h1>AI-Driven MRI Radiomics<br>for Glioblastoma</h1>
+  <div style="font-size:1.2rem; color:#7ecfff; margin-bottom: 24px;">
+    Quantitative Features Beyond Visible Segmentation<br>for Outcome Prediction and Explainable Machine Learning
+  </div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 28px;">
+    <span class="tag tag-blue">PyRadiomics</span>
+    <span class="tag tag-blue">Machine Learning</span>
+    <span class="tag tag-purple">SHAP Explainability</span>
+    <span class="tag tag-green">Peritumoral Analysis</span>
+    <span class="tag tag-blue">TCIA CFB-GBM Dataset</span>
+  </div>
+  <div class="two-col" style="max-width:700px; gap:20px; margin-top: 10px;">
+    <div class="metric-box">
+      <div class="metric-val">261</div>
+      <div class="metric-label">Patients (TSV cohort)</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-val">0.710</div>
+      <div class="metric-label">Best AUC achieved</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-val">+19%</div>
+      <div class="metric-label">Peritumoral improvement</div>
+    </div>
+  </div>
+  <div class="author">Author: [Your Name] · 2026</div>
+  <div class="slide-num">1 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 2: MOTIVATION ─────────────────────── -->
+<div class="slide dark-slide">
+  <h2>Why Is GBM Hard to Assess?</h2>
+  <div class="two-col">
+    <div>
+      <h3>The Clinical Problem</h3>
+      <ul>
+        <li><strong>Glioblastoma (WHO Grade 4)</strong> — most aggressive primary brain tumour</li>
+        <li>Median overall survival: <strong>14–16 months</strong> despite Stupp protocol</li>
+        <li>Current imaging standard: <strong>RANO criteria</strong> — measure contrast-enhancing volume on T1Gd</li>
+        <li>Problem: <strong>tumour infiltrates beyond the visible boundary</strong></li>
+        <li>Visible enhancement = breakdown of blood-brain barrier, not all tumour cells</li>
+      </ul>
+      <div class="highlight-box" style="margin-top: 20px;">
+        <p style="color:#7ecfff;">FLAIR MRI shows a broader region of signal abnormality beyond the enhancing tumour — this tissue contains infiltrating cells, oedema, and microenvironmental changes invisible to clinical assessment.</p>
+      </div>
+    </div>
+    <div>
+      <h3>What MRI Sequences Tell Us</h3>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-title">T1Gd (Gadolinium-enhanced)</div>
+        <p style="font-size:0.9rem;">Shows active blood-brain barrier breakdown. Bright = enhancing tumour core. Standard for diagnosis and treatment response.</p>
+      </div>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-title">FLAIR</div>
+        <p style="font-size:0.9rem;">Fluid-attenuated inversion recovery. Shows broader infiltration zone, oedema, and non-enhancing tumour. Extends well beyond T1Gd enhancement.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">The Gap</div>
+        <p style="font-size:0.9rem;">The tissue between T1Gd edge and FLAIR boundary contains prognostic signal that visual assessment ignores.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">2 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 3: WHAT IS RADIOMICS ─────────────────────── -->
+<div class="slide accent-slide">
+  <h2>What Is Radiomics?</h2>
+  <div class="two-col">
+    <div>
+      <p>Radiomics is the <strong>automated extraction of hundreds of quantitative features</strong> from medical images. Unlike simple measurements (volume, diameter), radiomics captures the <em>texture, heterogeneity, and spatial patterns</em> of tissue at sub-voxel level.</p>
+
+      <h3>Feature Categories</h3>
+      <div class="pipeline-step">
+        <div class="step-num">□</div>
+        <div class="step-text"><strong>Shape</strong> — Volume, compactness, sphericity, elongation, surface area</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">∿</div>
+        <div class="step-text"><strong>First-order</strong> — Mean, variance, skewness, kurtosis, energy, entropy of intensity histogram</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">⊞</div>
+        <div class="step-text"><strong>GLCM</strong> — Gray-Level Co-occurrence Matrix: contrast, correlation, homogeneity — captures pixel-pair relationships</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">▤</div>
+        <div class="step-text"><strong>GLRLM / GLSZM</strong> — Run-length and zone-size matrices: texture anisotropy and homogeneity zones</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">∴</div>
+        <div class="step-text"><strong>NGTDM / GLDM</strong> — Neighbourhood tone and dependence: local spatial heterogeneity</div>
+      </div>
+    </div>
+    <div>
+      <h3>Why Radiomics for GBM?</h3>
+      <ul>
+        <li>Non-invasive — uses existing clinical scans</li>
+        <li>Captures <strong>intratumour heterogeneity</strong> reflecting cell density, necrosis, vascularisation</li>
+        <li>Can encode <strong>microenvironmental signals</strong> in peritumoral tissue</li>
+        <li>Reproducible when standardised (IBSI-compliant)</li>
+      </ul>
+      <div class="finding-box" style="margin-top: 20px;">
+        <p>Aerts et al. (Nature Communications, 2014) showed that 4 radiomic features outperformed clinical prognostic models in lung cancer — launching the radiomics field in oncology.</p>
+      </div>
+      <h3 style="margin-top:20px;">This Project: PyRadiomics</h3>
+      <ul>
+        <li>Open-source, Python, IBSI-compliant</li>
+        <li>6 image×mask combinations</li>
+        <li>56 features per region × 6 regions = <strong>336 features per patient</strong></li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-num">3 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 4: DATASET ─────────────────────── -->
+<div class="slide dark-slide">
+  <h2>Dataset: TCIA CFB-GBM</h2>
+  <div class="two-col">
+    <div>
+      <p>The <strong>Collaborative Feasibility for Brain GBM (CFB-GBM)</strong> collection is publicly available through The Cancer Imaging Archive (TCIA). It contains multiparametric MRI, radiotherapy planning data, and clinical outcomes for glioblastoma patients.</p>
+
+      <div class="three-col" style="margin: 20px 0; gap: 14px;">
+        <div class="metric-box">
+          <div class="metric-val">264</div>
+          <div class="metric-label">Total patients</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-val">261</div>
+          <div class="metric-label">TSV ML cohort</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-val">79</div>
+          <div class="metric-label">NIfTI cohort</div>
+        </div>
+      </div>
+
+      <h3>Modalities Used</h3>
+      <ul>
+        <li><strong>T1Gd:</strong> contrast-enhanced T1 — tumour core delineation</li>
+        <li><strong>FLAIR:</strong> peritumoral oedema and infiltration</li>
+        <li><strong>GTV mask (NIfTI):</strong> gross tumour volume from radiotherapy planning</li>
+      </ul>
+
+      <h3 style="margin-top:16px;">Outcome Label</h3>
+      <p>Binary OS classification: <strong>Long survivors (≥ 55 weeks)</strong> vs <strong>Short survivors (&lt; 55 weeks)</strong>. Balanced: 40 long / 39 short (79-patient cohort).</p>
+    </div>
+    <div>
+      <h3>Dataset Pipeline</h3>
+      <div class="pipeline-step">
+        <div class="step-num">1</div>
+        <div class="step-text">Download NIfTI files from TCIA (patients 001–080)</div>
+        <div class="step-badge">80 pts</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">2</div>
+        <div class="step-text">Verify GTV masks — 79/80 successful</div>
+        <div class="step-badge">79 pts</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">3</div>
+        <div class="step-text">Create peritumoral rings (5mm, 10mm)</div>
+        <div class="step-badge">79 pts</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">4</div>
+        <div class="step-text">Extract PyRadiomics features (3mm resampling)</div>
+        <div class="step-badge">336 feats</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">5</div>
+        <div class="step-text">Merge with clinical survival data</div>
+        <div class="step-badge">OS label</div>
+      </div>
+      <div class="highlight-box">
+        <p style="font-size:0.9rem;"><strong>Privacy note:</strong> Only code and anonymised summary statistics are shared publicly. Raw MRI data remains on TCIA and is not included in the repository.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">4 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 5: PIPELINE ─────────────────────── -->
+<div class="slide accent-slide">
+  <h2>Complete AI-Radiomics Pipeline</h2>
+  <div style="display:grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 8px;">
+    <div class="card">
+      <div class="card-title" style="color:#00d4ff;">① Data Preparation</div>
+      <ul style="font-size:0.88rem;">
+        <li>Download NIfTI from TCIA</li>
+        <li>Inspect image dimensions &amp; spacing</li>
+        <li>Organise patient/timepoint hierarchy</li>
+        <li>Verify GTV mask integrity</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:#7b2ff7;">② Region Creation</div>
+      <ul style="font-size:0.88rem;">
+        <li>Load GTV mask (NIfTI)</li>
+        <li>Morphological dilation: 5mm, 10mm</li>
+        <li>Ring = dilation − inner mask</li>
+        <li>QC 4-panel figures per patient</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:#00ff96;">③ Feature Extraction</div>
+      <ul style="font-size:0.88rem;">
+        <li>PyRadiomics v3.0.1 (IBSI)</li>
+        <li>Resample to 3×3×3 mm</li>
+        <li>6 image×mask combinations</li>
+        <li>Shape + First-order + GLCM</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:#ff7f0e;">④ ML Training</div>
+      <ul style="font-size:0.88rem;">
+        <li>Imputation + StandardScaler</li>
+        <li>SelectKBest (top-10)</li>
+        <li>5-fold stratified CV</li>
+        <li>LogReg, SVM, RF, XGBoost</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:#b87aff;">⑤ Explainable AI</div>
+      <ul style="font-size:0.88rem;">
+        <li>SHAP TreeExplainer / KernelExplainer</li>
+        <li>Beeswarm + bar + waterfall plots</li>
+        <li>Permutation importance</li>
+        <li>Region-coloured feature attribution</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:#ff4466;">⑥ Peritumoral Analysis</div>
+      <ul style="font-size:0.88rem;">
+        <li>Per-feature univariate AUC</li>
+        <li>Region discriminative power</li>
+        <li>Violin + box plots by OS class</li>
+        <li>Tumour vs ring comparison</li>
+      </ul>
+    </div>
+  </div>
+  <div class="finding-box" style="margin-top: 20px;">
+    <p>All steps are implemented as standalone Python scripts. Fully reproducible from a single <code style="background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:4px;">conda activate cfb-gbm-radiomics</code> environment. See GitHub repository for full pipeline.</p>
+  </div>
+  <div class="slide-num">5 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 6: MRI REGIONS ─────────────────────── -->
+<div class="slide dark-slide">
+  <h2>Beyond Visible Segmentation: Peritumoral Rings</h2>
+  <div class="two-col">
+    <div>
+      <p>The <strong>key methodological innovation</strong> is creating concentric rings around the tumour to capture tissue in the infiltration zone that is invisible to clinical assessment.</p>
+
+      <h3>Region Definition</h3>
+      <div style="background: rgba(255,255,255,0.04); border-radius: 10px; padding: 16px; margin-bottom: 12px;">
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+          <div style="width:20px;height:20px;border-radius:3px;background:#d62728;"></div>
+          <strong>Intratumoral</strong> — GTV mask from radiotherapy planning
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+          <div style="width:20px;height:20px;border-radius:3px;background:#2ca02c;"></div>
+          <strong>Ring 5mm</strong> — Dilation 5mm minus tumour mask. Immediate infiltration zone.
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <div style="width:20px;height:20px;border-radius:3px;background:#1f77b4;"></div>
+          <strong>Ring 10mm</strong> — Dilation 10mm minus 5mm ring. Outer microenvironment.
+        </div>
+      </div>
+
+      <h3>Biological Rationale</h3>
+      <ul>
+        <li>GBM infiltrates <strong>2–3 cm beyond visible enhancement</strong></li>
+        <li>FLAIR oedema reflects cell infiltration, disrupted vasculature, hypoxia</li>
+        <li>Peritumoral tissue texture may encode <strong>IDH status, MGMT methylation signals</strong></li>
+        <li>Ring 5mm = highest density of infiltrating cells</li>
+        <li>Ring 10mm = tumour microenvironment / immune response zone</li>
+      </ul>
+    </div>
+    <div>
+      <h3>QC Verification — Patient 001</h3>
+      <p style="font-size:0.85rem; color:#8898aa;">4-panel QC figure generated automatically for all 79 patients:</p>
+      <img src="../results/figures/qc/001_t0_qc.png" alt="QC figure patient 001"
+           style="width:100%; border-radius:8px; border:1px solid rgba(0,212,255,0.25); margin-top:8px;"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+      <div style="display:none; background:rgba(255,255,255,0.04); border-radius:8px; padding:20px; text-align:center; border:1px dashed rgba(0,212,255,0.3);">
+        <p style="color:#7ecfff;">QC Figure: results/figures/qc/001_t0_qc.png</p>
+        <p style="font-size:0.8rem; color:#8898aa;">Shows T1Gd | T1Gd+GTV | FLAIR+GTV | T1Gd+Ring5mm</p>
+      </div>
+      <div class="fig-caption">Left→Right: T1Gd | T1Gd+tumour mask | FLAIR+tumour mask | T1Gd+Ring 5mm</div>
+    </div>
+  </div>
+  <div class="slide-num">6 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 7: MRI EXAMPLE ─────────────────────── -->
+<div class="slide accent-slide">
+  <h2>MRI Examples: Tumour and Peritumoral Regions</h2>
+  <p style="margin-bottom:16px;">QC figures automatically generated for all 79 patients. Each shows one axial slice through the tumour centre.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+    <div>
+      <img src="../results/figures/qc/003_t0_qc.png" alt="Patient 003"
+           style="width:100%; border-radius:8px; border:1px solid rgba(0,212,255,0.2);"
+           onerror="this.style.display='none'">
+      <div class="fig-caption">Patient 003 — t0 baseline scan</div>
+    </div>
+    <div>
+      <img src="../results/figures/qc/005_t0_qc.png" alt="Patient 005"
+           style="width:100%; border-radius:8px; border:1px solid rgba(0,212,255,0.2);"
+           onerror="this.style.display='none'">
+      <div class="fig-caption">Patient 005 — t0 baseline scan</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-top: 20px;">
+    <div class="highlight-box">
+      <strong style="color:#00d4ff;">Key Observation — T1Gd vs FLAIR:</strong>
+      <p style="font-size:0.9rem; margin-top:8px;">The FLAIR signal abnormality (panel 3) extends significantly beyond the contrast-enhancing GTV (panel 2). This is the region our peritumoral rings capture — tissue that is abnormal but not contoured in clinical practice.</p>
+    </div>
+    <div class="finding-box">
+      <strong style="color:#00ff96;">Ring 5mm Coverage:</strong>
+      <p style="font-size:0.9rem; margin-top:8px;">Panel 4 (blue overlay) shows Ring 5mm surrounding the tumour. This annular region is where infiltrating tumour cells are most dense, and where our analysis finds the <strong>highest discriminative power (mean AUC 0.598)</strong>.</p>
+    </div>
+  </div>
+  <div class="slide-num">7 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 8: FEATURE EXTRACTION ─────────────────────── -->
+<div class="slide dark-slide">
+  <h2>Radiomic Feature Extraction</h2>
+  <div class="two-col">
+    <div>
+      <h3>Extraction Settings</h3>
+      <table>
+        <tr><th>Parameter</th><th>Value</th></tr>
+        <tr><td>Tool</td><td>PyRadiomics v3.0.1</td></tr>
+        <tr><td>Standard</td><td>IBSI-compliant</td></tr>
+        <tr><td>Resampling</td><td>3×3×3 mm isotropic</td></tr>
+        <tr><td>Bin width</td><td>25 HU</td></tr>
+        <tr><td>Image types</td><td>Original only</td></tr>
+        <tr><td>Features / region</td><td>56</td></tr>
+        <tr><td>Total features</td><td>336 (6 regions)</td></tr>
+      </table>
+
+      <h3 style="margin-top:20px;">6 Image × Mask Combinations</h3>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
+        <div class="tag tag-blue" style="padding:8px 12px; border-radius:8px;">T1Gd + Tumor</div>
+        <div class="tag tag-blue" style="padding:8px 12px; border-radius:8px;">FLAIR + Tumor</div>
+        <div class="tag tag-green" style="padding:8px 12px; border-radius:8px;">T1Gd + Ring 5mm</div>
+        <div class="tag tag-green" style="padding:8px 12px; border-radius:8px;">FLAIR + Ring 5mm</div>
+        <div class="tag tag-purple" style="padding:8px 12px; border-radius:8px;">T1Gd + Ring 10mm</div>
+        <div class="tag tag-purple" style="padding:8px 12px; border-radius:8px;">FLAIR + Ring 10mm</div>
+      </div>
+    </div>
+    <div>
+      <h3>Feature Classes Extracted</h3>
+      <div class="pipeline-step">
+        <div class="step-num" style="font-size:1rem;">S</div>
+        <div>
+          <strong>Shape (intratumoral only)</strong>
+          <div style="font-size:0.82rem; color:#8898aa;">Volume, surface area, compactness, sphericity, elongation — describes tumour geometry</div>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num" style="font-size:1rem;">F</div>
+        <div>
+          <strong>First-Order Statistics</strong>
+          <div style="font-size:0.82rem; color:#8898aa;">Mean, variance, skewness, kurtosis, energy, entropy — describes intensity distribution within region</div>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num" style="font-size:1rem;">G</div>
+        <div>
+          <strong>GLCM — Gray-Level Co-occurrence</strong>
+          <div style="font-size:0.82rem; color:#8898aa;">Contrast, correlation, homogeneity, energy — captures spatial pixel-pair relationships (texture)</div>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:16px;">
+        <p style="font-size:0.88rem;"><strong>Resampling note:</strong> Original images are 512×512×208 at 0.5mm spacing (55M voxels). Resampling to 3mm reduces to ~4M voxels, enabling practical extraction in ~30 sec/patient while maintaining clinically relevant resolution.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">8 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 9: ML METHODS ─────────────────────── -->
+<div class="slide accent-slide">
+  <h2>Machine Learning: Design and Validation</h2>
+  <div class="two-col">
+    <div>
+      <h3>Prediction Task</h3>
+      <p>Binary classification: <strong>Long vs Short overall survival</strong>. Median split at 55 weeks (79-patient NIfTI cohort) and 50.5 weeks (261-patient TSV cohort).</p>
+
+      <h3 style="margin-top:16px;">Models Compared</h3>
+      <ul>
+        <li><strong>Logistic Regression L1</strong> — sparse, interpretable, handles correlated features</li>
+        <li><strong>SVM-RBF</strong> — handles non-linear boundaries, kernel trick</li>
+        <li><strong>Random Forest</strong> — ensemble of decision trees, robust to noise</li>
+        <li><strong>XGBoost</strong> — gradient boosting, strong baseline performance</li>
+      </ul>
+
+      <h3 style="margin-top:16px;">Pipeline per Model</h3>
+      <div class="pipeline-step" style="border-left-color:#ff7f0e;">
+        <div class="step-text" style="font-size:0.88rem;"><strong>Median Imputation</strong> → handles missing features from small masks</div>
+      </div>
+      <div class="pipeline-step" style="border-left-color:#ff7f0e;">
+        <div class="step-text" style="font-size:0.88rem;"><strong>StandardScaler</strong> → zero mean, unit variance</div>
+      </div>
+      <div class="pipeline-step" style="border-left-color:#ff7f0e;">
+        <div class="step-text" style="font-size:0.88rem;"><strong>SelectKBest (k=10)</strong> → ANOVA F-score, inside CV folds to prevent leakage</div>
+      </div>
+      <div class="pipeline-step" style="border-left-color:#ff7f0e;">
+        <div class="step-text" style="font-size:0.88rem;"><strong>Classifier</strong> → class_weight="balanced"</div>
+      </div>
+    </div>
+    <div>
+      <h3>Validation Strategy</h3>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-title">5-Fold Stratified Cross-Validation</div>
+        <p style="font-size:0.88rem;">Training set never used for evaluation. Feature selection inside each fold (no leakage). Class balance maintained across folds.</p>
+      </div>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-title">Bootstrap 95% Confidence Intervals</div>
+        <p style="font-size:0.88rem;">500 bootstrap iterations on held-out predictions. Quantifies uncertainty — essential for small cohorts where single-run AUC is unreliable.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Metrics Reported</div>
+        <p style="font-size:0.88rem;">AUC (primary), Balanced Accuracy, Sensitivity, Specificity, F1, PR-AUC.</p>
+      </div>
+      <div class="highlight-box" style="margin-top:16px;">
+        <p style="font-size:0.88rem;"><strong>Anti-overfitting measures:</strong> L1/ElasticNet regularisation, max_depth limits for trees, class-balanced weighting, feature selection inside CV.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">9 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 10: RESULTS 261 ─────────────────────── -->
+<div class="slide result-slide">
+  <h2>Results: 261-Patient Cohort (TSV Features)</h2>
+
+  <div class="three-col" style="margin-bottom: 24px; gap: 20px;">
+    <div class="metric-box">
+      <div class="metric-val">0.627</div>
+      <div class="metric-label">Volume-Only AUC</div>
+      <div class="metric-sub">Shape features only</div>
+    </div>
+    <div class="result-box">
+      <div class="result-val">0.710</div>
+      <div class="metric-label" style="color:#c8f0d8;">Best AUC</div>
+      <div class="result-delta">+13% vs volume</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-val">0.648</div>
+      <div class="metric-label">AUC 95% CI lower</div>
+      <div class="metric-sub">–0.767 upper bound</div>
+    </div>
+  </div>
+
+  <table>
+    <tr>
+      <th>Experiment</th><th>Best Model</th><th>Features</th>
+      <th>AUC</th><th>95% CI</th><th>Balanced Acc</th><th>F1</th>
+    </tr>
+    <tr>
+      <td>Volume Only</td><td>SVM-RBF</td><td>23</td>
+      <td>0.627</td><td>0.562–0.692</td><td>0.590</td><td>0.590</td>
+    </tr>
+    <tr>
+      <td>All Radiomics</td><td>RandomForest</td><td>139</td>
+      <td>0.670</td><td>0.607–0.735</td><td>0.640</td><td>0.644</td>
+    </tr>
+    <tr class="best-row">
+      <td>Intratumoral Only</td><td>LogReg ElasticNet</td><td>59</td>
+      <td>0.710</td><td>0.648–0.767</td><td>0.670</td><td>0.659</td>
+    </tr>
+  </table>
+
+  <div class="two-col" style="margin-top: 20px;">
+    <div class="finding-box">
+      <strong style="color:#00ff96;">Key Finding:</strong>
+      <p style="font-size:0.95rem;">Intratumoral radiomics (T1Gd + FLAIR texture) outperforms volume-only by <strong>+13.2% relative AUC improvement</strong> (0.627 → 0.710). This confirms that texture heterogeneity within the visible tumour carries prognostic information beyond size.</p>
+    </div>
+    <div class="highlight-box">
+      <strong>Why LogReg_ElasticNet wins:</strong>
+      <p style="font-size:0.9rem; margin-top:8px;">With n=261 and 59 features, sparse regularisation (ElasticNet) selects a small subset of the most discriminating features. This avoids overfitting better than the ensemble methods which require more data.</p>
+    </div>
+  </div>
+  <div class="slide-num">10 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 11: RESULTS PERITUMORAL ─────────────────────── -->
+<div class="slide result-slide">
+  <h2>Results: Peritumoral Analysis — 79 Patients</h2>
+
+  <div class="two-col">
+    <div>
+      <h3>ML Comparison: Tumor vs Tumor+Ring</h3>
+      <table>
+        <tr><th>Region Configuration</th><th>AUC</th><th>95% CI</th></tr>
+        <tr><td>T1Gd Tumor Only</td><td>0.562</td><td>0.437–0.688</td></tr>
+        <tr><td>Tumor T1Gd + FLAIR</td><td>0.535</td><td>0.405–0.664</td></tr>
+        <tr class="best-row"><td>Tumor + Ring 5mm</td><td>0.670</td><td>0.545–0.794</td></tr>
+        <tr><td>All Regions (6)</td><td>0.611</td><td>0.500–0.738</td></tr>
+      </table>
+
+      <div class="finding-box" style="margin-top:16px;">
+        <strong style="color:#00ff96;">+19% improvement:</strong>
+        <p>Adding Ring 5mm features: AUC 0.562 → <strong>0.670</strong></p>
+        <p style="font-size:0.85rem; margin-top:4px;">LogReg L1 (sparse) wins — suggesting a small number of peritumoral features drive the prediction.</p>
+      </div>
+    </div>
+    <div>
+      <h3>Per-Feature Discriminative Power by Region</h3>
+      <table>
+        <tr><th>Region</th><th>Mean AUC</th><th>Max AUC</th></tr>
+        <tr class="best-row"><td>T1Gd Ring 5mm</td><td>0.598</td><td>0.714</td></tr>
+        <tr class="best-row"><td>T1Gd Ring 10mm</td><td>0.591</td><td>0.696</td></tr>
+        <tr><td>FLAIR Tumor</td><td>0.571</td><td>0.646</td></tr>
+        <tr><td>FLAIR Ring 5mm</td><td>0.570</td><td>0.626</td></tr>
+        <tr><td>FLAIR Ring 10mm</td><td>0.570</td><td>0.670</td></tr>
+        <tr><td>T1Gd Tumor</td><td>0.556</td><td>0.639</td></tr>
+      </table>
+      <div class="highlight-box" style="margin-top:16px;">
+        <p style="font-size:0.9rem;"><strong>T1Gd rings outperform FLAIR</strong> — consistent with T1Gd capturing vascular permeability changes in the peritumoral microenvironment that are prognostically relevant.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">11 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 12: ROC ─────────────────────── -->
+<div class="slide dark-slide">
+  <h2>ROC Curves</h2>
+  <div class="two-col">
+    <div>
+      <h3>261-Patient Cohort</h3>
+      <img src="../results/figures/roc_curves.png" alt="ROC curves 261 patients"
+           style="width:100%; border-radius:8px; border:1px solid rgba(0,212,255,0.2);"
+           onerror="this.style.background='rgba(255,255,255,0.04)'; this.style.height='200px'">
+      <div class="fig-caption">Volume-only vs Intratumoral vs All Radiomics (5-fold CV, n=261)</div>
+    </div>
+    <div>
+      <h3>79-Patient Peritumoral Comparison</h3>
+      <img src="../results/figures/roc_peritumoral.png" alt="ROC peritumoral"
+           style="width:100%; border-radius:8px; border:1px solid rgba(0,212,255,0.2);"
+           onerror="this.style.background='rgba(255,255,255,0.04)'; this.style.height='200px'">
+      <div class="fig-caption">Tumor-only vs Tumor+Ring 5mm vs All Regions (5-fold CV, n=79)</div>
+    </div>
+  </div>
+  <div class="finding-box" style="margin-top:16px;">
+    <p>The green curve (Tumor+Ring 5mm, AUC=0.670) clearly separates from red (Tumor Only, AUC=0.562), confirming that peritumoral features add independent prognostic value beyond the visible tumour boundary.</p>
+  </div>
+  <div class="slide-num">12 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 13: SHAP ─────────────────────── -->
+<div class="slide accent-slide">
+  <h2>Explainable AI: SHAP Analysis</h2>
+  <div class="two-col">
+    <div>
+      <h3>What Is SHAP?</h3>
+      <p>SHapley Additive exPlanations assign each feature a contribution value to the model's prediction for each individual patient. Based on game theory (Shapley values).</p>
+      <ul style="margin-top:10px; font-size:0.9rem;">
+        <li><strong>Positive SHAP:</strong> feature pushes prediction toward "Long survivor"</li>
+        <li><strong>Negative SHAP:</strong> feature pushes toward "Short survivor"</li>
+        <li><strong>Mean |SHAP|:</strong> average absolute importance across all patients</li>
+      </ul>
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title">Why SHAP matters here</div>
+        <p style="font-size:0.88rem;">With 336 features, knowing <em>which</em> features and <em>which regions</em> drive predictions is essential for biological interpretation. SHAP lets us ask: "Is the model using peritumoral texture or intratumoral shape?"</p>
+      </div>
+      <img src="../results/figures/shap_bar.png" alt="SHAP bar"
+           style="width:100%; border-radius:8px; border:1px solid rgba(123,47,247,0.3); margin-top:16px;"
+           onerror="this.style.display='none'">
+      <div class="fig-caption">Top features by mean |SHAP value|, coloured by sequence region</div>
+    </div>
+    <div>
+      <h3>SHAP Summary Plot (Beeswarm)</h3>
+      <img src="../results/figures/shap_summary.png" alt="SHAP summary"
+           style="width:100%; border-radius:8px; border:1px solid rgba(123,47,247,0.3);"
+           onerror="this.style.background='rgba(255,255,255,0.04)'; this.style.height='280px'">
+      <div class="fig-caption">Each dot = one patient. Red = high feature value. Right = pushes toward long survival.</div>
+      <div class="highlight-box" style="margin-top:12px;">
+        <p style="font-size:0.88rem;"><strong>Reading the plot:</strong> Features at the top are most important. Dot colour shows the feature value (red=high, blue=low). Horizontal position shows SHAP value direction.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">13 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 14: REGION DIVERGENCE ─────────────────────── -->
+<div class="slide dark-slide">
+  <h2>Feature Analysis: Which Region Matters Most?</h2>
+  <div class="two-col">
+    <div>
+      <img src="../results/figures/region_divergence.png" alt="Region divergence"
+           style="width:100%; border-radius:8px; border:1px solid rgba(0,212,255,0.2);"
+           onerror="this.style.display='none'">
+      <div class="fig-caption">Mean per-feature AUC by region. Solid = mean AUC, transparent = max AUC. Dashed line = chance (0.5).</div>
+    </div>
+    <div>
+      <img src="../results/figures/top_features_violin.png" alt="Violin plots"
+           style="width:100%; border-radius:8px; border:1px solid rgba(0,212,255,0.2);"
+           onerror="this.style.display='none'">
+      <div class="fig-caption">Top 12 discriminating features — violin plots for Long (blue) vs Short (red) survivors. AUC and p-value shown.</div>
+    </div>
+  </div>
+  <div class="finding-box" style="margin-top:16px;">
+    <strong style="color:#00ff96;">Interpretation:</strong>
+    <p style="font-size:0.95rem;">T1Gd Ring 5mm and Ring 10mm consistently rank highest in discriminative power. The violin plots show that specific GLCM texture features in the peritumoral zone differ significantly between long and short survivors — providing a biological basis for the ML improvement.</p>
+  </div>
+  <div class="slide-num">14 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 15: AI COMPONENT ─────────────────────── -->
+<div class="slide accent-slide">
+  <h2>The AI Component — Is This AI?</h2>
+  <div class="three-col">
+    <div class="card">
+      <div class="icon">🤖</div>
+      <div class="card-title">Machine Learning</div>
+      <ul style="font-size:0.88rem;">
+        <li>Logistic Regression with L1/ElasticNet regularisation</li>
+        <li>Support Vector Machine (RBF kernel)</li>
+        <li>Random Forest (200 trees)</li>
+        <li>XGBoost gradient boosting</li>
+        <li>Automated feature selection (ANOVA F-score)</li>
+      </ul>
+      <p style="font-size:0.82rem; color:#8898aa; margin-top:8px;">All are classical AI/ML algorithms learning patterns from labelled patient data.</p>
+    </div>
+    <div class="card">
+      <div class="icon">💡</div>
+      <div class="card-title">Explainable AI (XAI)</div>
+      <ul style="font-size:0.88rem;">
+        <li>SHAP (SHapley Additive exPlanations)</li>
+        <li>TreeExplainer for tree models</li>
+        <li>KernelExplainer for linear models</li>
+        <li>Per-patient attribution maps</li>
+        <li>Permutation importance</li>
+      </ul>
+      <p style="font-size:0.82rem; color:#8898aa; margin-top:8px;">XAI is AI that explains its own reasoning — critical for medical applications.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🧠</div>
+      <div class="card-title">Deep Learning (Optional)</div>
+      <ul style="font-size:0.88rem;">
+        <li>3D ResNet architecture (train_deep_embeddings.py)</li>
+        <li>2-channel input: T1Gd + FLAIR patches</li>
+        <li>128-dim learned embeddings</li>
+        <li>Requires 48GB NVIDIA GPU</li>
+        <li>Combines with handcrafted features</li>
+      </ul>
+      <p style="font-size:0.82rem; color:#8898aa; margin-top:8px;">Deep learning extracts features without manual engineering — end-to-end AI.</p>
+    </div>
+  </div>
+  <div class="finding-box" style="margin-top: 24px;">
+    <p><strong>Yes, this is AI.</strong> The pipeline implements supervised machine learning, automated feature selection, and explainable AI — three core pillars of modern AI in medical imaging. The ML models learn to predict patient survival directly from pixel-level image features, without any manual rule-based classification.</p>
+  </div>
+  <div class="slide-num">15 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 16: PERMUTATION ─────────────────────── -->
+<div class="slide dark-slide">
+  <h2>Model Robustness: Permutation Importance</h2>
+  <div class="two-col">
+    <div>
+      <img src="../results/figures/permutation_importance.png" alt="Permutation importance"
+           style="width:100%; border-radius:8px; border:1px solid rgba(0,212,255,0.2);"
+           onerror="this.style.display='none'">
+      <div class="fig-caption">Permutation importance: mean decrease in AUC when each feature is randomly shuffled (30 repeats, ± std dev).</div>
+    </div>
+    <div>
+      <h3>What Is Permutation Importance?</h3>
+      <p>A model-agnostic method to measure feature importance: randomly shuffle each feature, measure the drop in AUC. Features that cause a large drop are truly important — they cannot be replaced by noise.</p>
+
+      <h3 style="margin-top:16px;">Why This Matters</h3>
+      <ul>
+        <li>More reliable than tree-based feature importance (which can be biased by correlated features)</li>
+        <li>Directly measures impact on prediction performance</li>
+        <li>Confirms SHAP findings independently</li>
+      </ul>
+
+      <div class="highlight-box" style="margin-top:16px;">
+        <p style="font-size:0.9rem;">Features with error bars overlapping zero contribute noise rather than signal. The features with the largest reliable importance are the true drivers of survival prediction.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">16 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 17: LIMITATIONS ─────────────────────── -->
+<div class="slide warn-slide">
+  <h2>Limitations and Honest Assessment</h2>
+  <div class="two-col">
+    <div>
+      <h3>Statistical Limitations</h3>
+      <ul>
+        <li><strong>Small sample size</strong> — n=79 for peritumoral analysis. Wide 95% CIs reflect genuine uncertainty. AUC=0.670 CI [0.545–0.794] includes 0.5 at the lower bound.</li>
+        <li><strong>Single cohort</strong> — No external validation. Results may not generalise to other institutions or protocols.</li>
+        <li><strong>Feature selection inside CV</strong> — Reduces but does not eliminate overfitting risk with many features.</li>
+      </ul>
+
+      <h3 style="margin-top:16px;">Clinical Limitations</h3>
+      <ul>
+        <li><strong>RTSTRUCT masks</strong> — Radiotherapy GTV contours, not pathology-confirmed tumour boundaries</li>
+        <li><strong>OS binary label</strong> — Median split is arbitrary; continuous survival would be more informative</li>
+        <li><strong>Heterogeneous acquisition</strong> — Multi-scanner, multi-protocol data despite z-score normalisation</li>
+        <li><strong>NOT a clinical tool</strong> — Educational research prototype only</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Future Directions</h3>
+      <div class="pipeline-step" style="border-left-color:#ff8c00;">
+        <div class="step-text"><strong>Larger datasets</strong> — BraTS challenge dataset, TCGA-GBM (n=250+), UCSF GBM collection</div>
+      </div>
+      <div class="pipeline-step" style="border-left-color:#ff8c00;">
+        <div class="step-text"><strong>External validation</strong> — Train on CFB-GBM, validate on independent cohort</div>
+      </div>
+      <div class="pipeline-step" style="border-left-color:#ff8c00;">
+        <div class="step-text"><strong>Molecular markers</strong> — Stratify by IDH mutation, MGMT methylation, TERT promoter</div>
+      </div>
+      <div class="pipeline-step" style="border-left-color:#ff8c00;">
+        <div class="step-text"><strong>Deep learning</strong> — 3D ResNet embeddings (implemented but needs larger cohort)</div>
+      </div>
+      <div class="pipeline-step" style="border-left-color:#ff8c00;">
+        <div class="step-text"><strong>Multiparametric</strong> — Add ADC, DSC perfusion, MR spectroscopy when available</div>
+      </div>
+      <div class="pipeline-step" style="border-left-color:#ff8c00;">
+        <div class="step-text"><strong>Standardised protocol</strong> — Prospective acquisition with fixed scanner/sequence parameters</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">17 / 18</div>
+</div>
+
+<!-- ─────────────────────── SLIDE 18: CONCLUSION ─────────────────────── -->
+<div class="slide title-slide">
+  <h2 style="color:#00ff96;">Conclusions</h2>
+
+  <div class="quote">
+    "Peritumoral radiomic features — invisible to clinical assessment — carry independent prognostic information in glioblastoma."
+  </div>
+
+  <div class="three-col" style="gap:16px; margin: 20px 0;">
+    <div class="result-box">
+      <div class="result-val">+13%</div>
+      <div class="metric-label" style="color:#c8f0d8;">AUC improvement</div>
+      <div class="metric-sub" style="color:#7a9a7a;">Radiomics vs Volume (n=261)</div>
+    </div>
+    <div class="result-box">
+      <div class="result-val">+19%</div>
+      <div class="metric-label" style="color:#c8f0d8;">AUC improvement</div>
+      <div class="metric-sub" style="color:#7a9a7a;">+Ring 5mm vs Tumor-only (n=79)</div>
+    </div>
+    <div class="result-box">
+      <div class="result-val">0.714</div>
+      <div class="metric-label" style="color:#c8f0d8;">Best single feature AUC</div>
+      <div class="metric-sub" style="color:#7a9a7a;">T1Gd Ring 5mm GLCM feature</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="gap:20px;">
+    <div>
+      <h3>What Was Built</h3>
+      <ul>
+        <li>Complete reproducible AI-radiomics pipeline (Python, open-source)</li>
+        <li>Peritumoral ring analysis — a key novel component</li>
+        <li>SHAP explainability — biologically interpretable results</li>
+        <li>All code on GitHub — fully reproducible</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Repository</h3>
+      <div class="card">
+        <div class="card-title">GitHub</div>
+        <p style="font-size:0.9rem;">[github.com/your-username/cfb-gbm-ai-radiomics]</p>
+        <div style="margin-top:10px; font-size:0.82rem; color:#8898aa;">
+          conda env create -f environment.yml<br>
+          conda activate cfb-gbm-radiomics<br>
+          python src/create_regions_nifti.py ...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin-top:32px; color:#8898aa; font-size:1rem;">
+    Thank you for your attention &nbsp;·&nbsp; Questions welcome
+  </div>
+  <div class="slide-num">18 / 18</div>
+</div>
+
+</div>
+</body>
+</html>

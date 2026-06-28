@@ -1,0 +1,37 @@
+name: cfb-gbm-radiomics
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - numpy>=1.24
+  - pandas>=2.0
+  - scipy>=1.11
+  - scikit-learn>=1.3
+  - joblib>=1.3
+  - pyyaml>=6.0
+  - tqdm>=4.65
+  - matplotlib>=3.7
+  - seaborn>=0.13
+  - pillow>=10.0
+  - SimpleITK>=2.3
+  - nibabel>=5.1
+  - pydicom>=2.4
+  - jupyterlab>=4.0
+  # PyTorch with CUDA (largest single download — adjust cuda version if needed)
+  - pytorch>=2.1
+  - torchvision>=0.16
+  - pytorch-cuda=12.1
+  - pip:
+    - dicom2nifti>=2.4
+    - rt-utils>=1.2
+    - tcia-utils>=2.0
+    - xgboost>=2.0
+    - lightgbm>=4.1
+    - shap>=0.43
+    - imbalanced-learn>=0.11
+    - python-docx>=1.1
+    - umap-learn>=0.5
