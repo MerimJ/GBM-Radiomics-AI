@@ -1,6 +1,6 @@
 # 🧠 AI-Driven MRI Radiomics for Glioblastoma
 
-**Quantitative Features Beyond Visible Segmentation — Outcome Prediction & Explainable AI**
+**Quantitative Features Beyond Visible Segmentation - Outcome Prediction & Explainable AI**
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
 ![PyRadiomics](https://img.shields.io/badge/PyRadiomics-3.0.1-orange)
@@ -14,11 +14,11 @@
 
 ## What This Project Does
 
-Glioblastoma (GBM) is the most aggressive primary brain tumour. Standard clinical imaging measures only the *visible* contrast-enhancing tumour. But GBM infiltrates **2–3 cm beyond the visible boundary** — and that tissue contains hidden prognostic signals.
+Glioblastoma (GBM) is the most aggressive primary brain tumour. Standard clinical imaging measures only the *visible* contrast-enhancing tumour. But GBM infiltrates **2–3 cm beyond the visible boundary** - and that tissue contains hidden prognostic signals.
 
 This pipeline asks: **can quantitative radiomic features from the tissue surrounding the tumour predict survival better than visible tumour measurements alone?**
 
-**Answer: Yes — adding peritumoral ring features improves AUC by +19% over tumour-only.**
+**Answer: Yes - adding peritumoral ring features improves AUC by +19% over tumour-only.**
 
 ---
 
@@ -40,7 +40,7 @@ This pipeline asks: **can quantitative radiomic features from the tissue surroun
 | 🟠 FLAIR Tumor | 0.571 | 0.646 |
 | 🔴 T1Gd Tumor | 0.556 | 0.639 |
 
-> **T1Gd peritumoral rings outperform intratumoral features** — consistent with GBM biology: vascular permeability changes in the peritumoral zone reflect infiltrating tumour cells invisible to clinical assessment.
+> **T1Gd peritumoral rings outperform intratumoral features** - consistent with GBM biology: vascular permeability changes in the peritumoral zone reflect infiltrating tumour cells invisible to clinical assessment.
 
 ---
 
@@ -66,25 +66,25 @@ Region Discriminative Power Analysis
 
 ## Sample Figures
 
-### MRI Regions — Patient Examples
+### MRI Regions - Patient Examples
 *Left→Right: T1Gd (raw) | T1Gd + GTV mask | FLAIR + GTV mask | T1Gd + Ring 5mm (blue)*
 
 ![Patient 001](results/figures/qc/001_t0_qc.png)
 ![Patient 005](results/figures/qc/005_t0_qc.png)
 ![Patient 010](results/figures/qc/010_t0_qc.png)
 
-> **Key observation:** Panel 3 (FLAIR + GTV) shows the bright FLAIR signal extending far beyond the red GTV contour. This is the infiltration zone captured by the peritumoral rings (Panel 4, blue). This tissue is routinely ignored in clinical assessment — but our analysis shows it contains the highest discriminative signal.
+> **Key observation:** Panel 3 (FLAIR + GTV) shows the bright FLAIR signal extending far beyond the red GTV contour. This is the infiltration zone captured by the peritumoral rings (Panel 4, blue). This tissue is routinely ignored in clinical assessment - but our analysis shows it contains the highest discriminative signal.
 
 ---
 
-### ROC Curves — 261-Patient Cohort
+### ROC Curves - 261-Patient Cohort
 *Intratumoral radiomics (AUC=0.710) clearly outperforms volume-only baseline (AUC=0.627)*
 
 ![ROC curves](results/figures/roc_curves.png)
 
 ---
 
-### Peritumoral Comparison — 79 Patients
+### Peritumoral Comparison - 79 Patients
 *Adding Ring 5mm features: AUC 0.562 → 0.670 (+19%)*
 
 ![ROC peritumoral](results/figures/roc_peritumoral.png)
@@ -98,14 +98,14 @@ Region Discriminative Power Analysis
 
 ---
 
-### SHAP Explainability — Feature Attribution
+### SHAP Explainability - Feature Attribution
 *Top features by mean absolute SHAP value, coloured by region of origin*
 
 ![SHAP bar](results/figures/shap_bar.png)
 
 ---
 
-### Top Discriminating Features — Violin Plots
+### Top Discriminating Features - Violin Plots
 *Long vs Short survivors. Blue=Long, Red=Short. AUC and p-value shown per feature.*
 
 ![Violin plots](results/figures/top_features_violin.png)
@@ -116,11 +116,11 @@ Region Discriminative Power Analysis
 
 This project integrates three complementary layers of artificial intelligence:
 
-**I. Supervised Machine Learning** — Four classifiers (Logistic Regression, SVM, Random Forest, XGBoost) are trained to predict patient survival class directly from radiomic imaging features. Automated feature selection (ANOVA F-score, SelectKBest) identifies the most discriminating features without manual intervention.
+**I. Supervised Machine Learning** - Four classifiers (Logistic Regression, SVM, Random Forest, XGBoost) are trained to predict patient survival class directly from radiomic imaging features. Automated feature selection (ANOVA F-score, SelectKBest) identifies the most discriminating features without manual intervention.
 
-**II. Explainable Artificial Intelligence (XAI)** — SHAP (SHapley Additive exPlanations) decomposes each model prediction into individual feature contributions using cooperative game theory. This produces per-patient, per-feature attribution maps that allow biological interpretation of model decisions — addressing the "black box" problem inherent to complex ML models.
+**II. Explainable Artificial Intelligence (XAI)** - SHAP (SHapley Additive exPlanations) decomposes each model prediction into individual feature contributions using cooperative game theory. This produces per-patient, per-feature attribution maps that allow biological interpretation of model decisions - addressing the "black box" problem inherent to complex ML models.
 
-**III. Deep Learning (optional)** — A 3D Residual Neural Network (ResNet) extracts 128-dimensional embeddings directly from volumetric MRI patches, learning spatial features without manual feature engineering. Implemented in `src/train_deep_embeddings.py`; requires an NVIDIA GPU (≥48 GB VRAM).
+**III. Deep Learning (optional)** - A 3D Residual Neural Network (ResNet) extracts 128-dimensional embeddings directly from volumetric MRI patches, learning spatial features without manual feature engineering. Implemented in `src/train_deep_embeddings.py`; requires an NVIDIA GPU (≥48 GB VRAM).
 
 | Layer | Method | Purpose |
 |-------|--------|---------|
@@ -225,8 +225,8 @@ cfb-gbm-ai-radiomics/
 
 ## Dataset
 
-**Collection:** CFB-GBM — The Cancer Imaging Archive (TCIA)  
-**Access:** Free, public — https://www.cancerimagingarchive.net/collection/cfb-gbm/
+**Collection:** CFB-GBM - The Cancer Imaging Archive (TCIA)  
+**Access:** Free, public - https://www.cancerimagingarchive.net/collection/cfb-gbm/
 
 ⚠️ Raw MRI files are **not** included in this repository. Download from TCIA.
 
@@ -237,16 +237,16 @@ cfb-gbm-ai-radiomics/
 
 ## Limitations
 
-- n=79 for peritumoral analysis — wide confidence intervals, no external validation
+- n=79 for peritumoral analysis - wide confidence intervals, no external validation
 - RTSTRUCT masks are radiotherapy targets, not pathology-confirmed
-- Single cohort — results may not generalise to other institutions
-- **Not a clinical tool** — educational/research prototype only
+- Single cohort - results may not generalise to other institutions
+- **Not a clinical tool** - educational/research prototype only
 
 ---
 
 ## License
 
-MIT License — see [LICENSE](LICENSE)
+MIT License - see [LICENSE](LICENSE)
 
 ---
 
